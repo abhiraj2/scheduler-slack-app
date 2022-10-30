@@ -13,12 +13,17 @@ var app = new App(
 );
 
 
-var clients = {
+var recipents = {
     users: [],
     channels: []
 };
 
-var message = ""
+var message = {
+    date: "",
+    time: "",
+    tzone: "",
+    msg: ""
+}
 
 app.message("hello", async ({message, say}) => {
     await say({
@@ -112,18 +117,18 @@ app.action("button_click", async ({body, ack, client}) => {
 
 app.action("multi_conversations_select-action", async ({body, ack, client, user, message}) => {
     await ack()
-    clients.users = [];
-    clients.channels = [];
+    recipents.users = [];
+    recipents.channels = [];
     for(i of body.actions[0].selected_conversations){
         if(i[0] == 'U'){
-            clients.users.push(i);
+            recipents.users.push(i);
         }
         else if(i[0] == 'C'){
-            clients.channels.push(i);
+            recipents.channels.push(i);
         }
     }
-    clients.users = [...new Set(clients.users)]
-    clients.channels = [...new Set(clients.channels)]
+    recipents.users = [...new Set(recipents.users)]
+    recipents.channels = [...new Set(recipents.channels)]
     
     //console.log(body)
 });
@@ -131,13 +136,14 @@ app.action("multi_conversations_select-action", async ({body, ack, client, user,
 app.view('selected', async ({body, ack, view, user, client}) => {
     await ack()
     //console.log(view.blocks[1].block_id)
-    message = Object.values(view.state.values[view.blocks[1].block_id])[0].value
+    message.msg = Object.values(view.state.values[view.blocks[1].block_id])[0].value
     //console.log(message, clients)
 
     await client.views.open(
         {
             trigger_id: body.trigger_id,
             view: {
+                "callback_id": "reminder_set",
                 "title": {
                     "type": "plain_text",
                     "text": "Date and Time",
@@ -169,7 +175,7 @@ app.view('selected', async ({body, ack, view, user, client}) => {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "```Message```"
+                            "text": `\`\`\`${message.msg}\`\`\``
                         }
                     },
                     {
@@ -259,7 +265,57 @@ app.view('selected', async ({body, ack, view, user, client}) => {
 });
 
 
+app.view("reminder_set", async ({body, ack, view, user, client}) => {
+    await ack();
+    message.date = view.state.values[view.blocks[3].block_id]['datepicker-action'].selected_date;
+    message.time = view.state.values[view.blocks[4].block_id]['timepicker-action'].selected_time;
+    message.tzone = view.state.values[view.blocks[5].block_id]['static_select-action'].selected_option.value;
+
+    message.msg = parse_message(message.msg); // will be called inside fire_message
+    console.log(message.msg)
+    //fire_message(message, recipents)
+});
+
 (async () => {
     await app.start();
     console.log("App running");
 })();
+
+
+function parse_message(msg){
+    if(msg.includes('$')){
+        for(let i=0; i< msg.length; i++){
+            //console.log(i)
+            if(msg[i] == '$' && (i+1<msg.length && msg[i+1]=='{')){
+                for(var j=i+1; j<msg.length; j++){
+                    if(msg[j] == '}'){
+                        console.log(i,j)
+                        break;
+                    }
+                }
+                let to_change = msg.slice(i, j+1)
+                //console.log(to_change)
+                switch(to_change){
+                    case "${firstName}":
+                        //console.log(to_change)
+                        msg = msg.replace(to_change, "Abhiraj");
+                        //console.log(msg)
+                        break;
+                    case "${lastName}":
+                        //console.log(to_change)
+                        msg = msg.replace(to_change, "A");
+                        break;
+                    case "${fullName}":
+                        //console.log(to_change)
+                        msg = msg.replace(to_change, "Abhiraj A");
+                        break;
+                    default:
+                        console.log(to_change);
+                        break;
+                }
+                //console.log(i, j+1)
+            }
+        }
+    }   
+    return msg
+}
