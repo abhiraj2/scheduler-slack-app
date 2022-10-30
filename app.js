@@ -15,7 +15,8 @@ var app = new App(
 
 var recipents = {
     users: [],
-    channels: []
+    channels: [],
+    groups: []
 };
 
 var message = {
@@ -126,9 +127,13 @@ app.action("multi_conversations_select-action", async ({body, ack, client, user,
         else if(i[0] == 'C'){
             recipents.channels.push(i);
         }
+        else if(i[0] == 'G'){
+            recipents.channels.push(i);
+        }
     }
     recipents.users = [...new Set(recipents.users)]
     recipents.channels = [...new Set(recipents.channels)]
+    recipents.groups = [...new Set(recipents.groups)]
     
     //console.log(body)
 });
@@ -273,7 +278,7 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
 
     message.msg = parse_message(message.msg); // will be called inside fire_message
     console.log(message.msg)
-    //fire_message(message, recipents)
+    fire_message(message, recipents, client)
 });
 
 (async () => {
@@ -282,6 +287,13 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
 })();
 
 
+async function fire_message(message, recipents, client){
+    let result = await client.chat.postMessage({
+        channel: "C048MP3NAN8",
+        text: message.msg
+    });
+}
+
 function parse_message(msg){
     if(msg.includes('$')){
         for(let i=0; i< msg.length; i++){
@@ -289,7 +301,7 @@ function parse_message(msg){
             if(msg[i] == '$' && (i+1<msg.length && msg[i+1]=='{')){
                 for(var j=i+1; j<msg.length; j++){
                     if(msg[j] == '}'){
-                        console.log(i,j)
+                        //console.log(i,j)
                         break;
                     }
                 }
