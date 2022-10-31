@@ -288,10 +288,33 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
 
 
 async function fire_message(message, recipents, client){
-    let result = await client.chat.postMessage({
-        channel: "C048MP3NAN8",
-        text: message.msg
-    });
+    var failed = 0;
+    for(var i of recipents.users){
+        //console.log(i);
+        let result = await client.chat.postMessage({
+            channel: i,
+            text: message.msg
+        });
+        if(!result){
+            failed++;
+        }
+    }
+
+    if(message.tzone == 't2'){
+        var chan_users = [];
+        for(var i of recipents.channels){
+            let chan_info = await client.conversations.info(i);
+            // for(var j of user_lis){
+            //     chan_users.push(j['id'])
+            // }       
+        }
+        console.log(chan_users)
+    }
+
+    // let result = await client.chat.postMessage({
+    //     channel: "U048XU5F0L9",
+    //     text: message.msg
+    // });
 }
 
 function parse_message(msg){
