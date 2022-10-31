@@ -291,26 +291,62 @@ async function fire_message(message, recipents, client){
     var failed = 0;
     for(var i of recipents.users){
         //console.log(i);
-        let result = await client.chat.postMessage({
-            channel: i,
-            text: message.msg
-        });
-        if(!result){
-            failed++;
+        try{
+            let result = await client.chat.postMessage({
+                channel: i,
+                text: message.msg
+            });
         }
+        catch(e){
+            failed++;
+            console.log(e);
+        }
+        
     }
 
     if(message.tzone == 't2'){
         var chan_users = [];
         for(var i of recipents.channels){
-            let chan_info = await client.conversations.info(i);
-            // for(var j of user_lis){
-            //     chan_users.push(j['id'])
-            // }       
+            let chan_info = await client.conversations.members({channel: i});
+            var members = chan_info.members
+            for(var j of members){
+                chan_users.push(j)
+            }       
         }
-        console.log(chan_users)
+        chan_users = [...new Set(chan_users)]
+        //console.log(chan_users)
+        for(var i of chan_users){
+            try{
+                let result = await client.chat.postMessage({
+                    channel: i,
+                    text: message.msg
+                });
+            }
+            catch(e){
+                failed++;
+                console.log(e);
+            }
+        }
+    }
+    else if(message.tzone == 't3' || message.tzone == 't1'){
+        //console.log("BRoooooo")
+        for(var i of recipents.channels){
+            console.log(i)
+            try{
+                let result = await client.chat.postMessage({
+                    channel: i,
+                    text: message.msg
+                });
+                
+            }
+            catch(e){
+                failed++;
+                console.log(e);
+            }
+        }
     }
 
+    console.log("No. of Failed Messages ", failed);
     // let result = await client.chat.postMessage({
     //     channel: "U048XU5F0L9",
     //     text: message.msg
