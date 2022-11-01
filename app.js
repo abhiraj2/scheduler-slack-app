@@ -1,5 +1,11 @@
 const {App} = require("@slack/bolt");
+const dayjs = require("dayjs");
 
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone')
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 //console.log(process.env.SLACK_SIGNING_SECRET, process.env.SLACK_BOT_TOKEN)
 
 var app = new App(
@@ -277,8 +283,8 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
     message.tzone = view.state.values[view.blocks[5].block_id]['static_select-action'].selected_option.value;
 
     message.msg = parse_message(message.msg); // will be called inside fire_message
-    console.log(message.msg)
-    fire_message(message, recipents, client)
+    console.log(body.user)
+    fire_message(message, recipents, client, body.user.id)
 });
 
 (async () => {
@@ -287,14 +293,38 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
 })();
 
 
-async function fire_message(message, recipents, client){
+async function fire_message(message, recipents, client, user){
     var failed = 0;
+    console.log(message.date, message.time)
     for(var i of recipents.users){
         //console.log(i);
         try{
-            let result = await client.chat.postMessage({
+            // var t = await client.users.info({user: i});
+            // t = t.user['tz_offset']/3600;
+
+            // It just works with Epoch time which is in UTC
+            var d = dayjs.tz(message.date + " " + message.time, "Etc/UTC")
+            //console.log(d)
+            d = d.unix()
+            //console.log(d)
+            if(message.tzone == 't1'){
+                var deltaT = await client.users.info({user: user});
+                deltaT = deltaT.user["tz_offset"];
+                d -= deltaT
+                
+            }
+            else if(message.tzone == 't2'){
+                var deltaT = await client.users.info({user: i});
+                deltaT = deltaT.user["tz_offset"];
+                d -= deltaT
+            }
+            //console.log(d)  
+            //console.log(d)
+            let result = await client.chat.scheduleMessage({
                 channel: i,
-                text: message.msg
+                text: message.msg,
+                post_at: d
+
             });
         }
         catch(e){
