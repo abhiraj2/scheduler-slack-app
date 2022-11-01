@@ -282,8 +282,8 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
     message.time = view.state.values[view.blocks[4].block_id]['timepicker-action'].selected_time;
     message.tzone = view.state.values[view.blocks[5].block_id]['static_select-action'].selected_option.value;
 
-    message.msg = parse_message(message.msg); // will be called inside fire_message
-    console.log(body.user)
+    //message.msg = parse_message(message.msg); // will be called inside fire_message
+    //console.log(body.user)
     fire_message(message, recipents, client, body.user.id)
 });
 
@@ -295,6 +295,10 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
 
 async function fire_message(message, recipents, client, user){
     var failed = 0;
+    var u_inf = {
+        first_name: "",
+        last_name:  ""
+    }
     console.log(message.date, message.time)
     for(var i of recipents.users){
         //console.log(i);
@@ -307,6 +311,18 @@ async function fire_message(message, recipents, client, user){
             //console.log(d)
             d = d.unix()
             //console.log(d)
+
+
+            var inf = await client.users.info({user: i});
+            inf = inf.user['real_name'].split(/(\s+)/);
+            //console.log(inf)
+            u_inf.last_name = inf[inf.length-1]
+            inf = inf.slice(0,inf.length-1);
+            u_inf.first_name = inf.join("")
+            //console.log(u_inf)
+
+            var m = parse_message(message.msg, u_inf);
+            console.log(m)
             if(message.tzone == 't1'){
                 var deltaT = await client.users.info({user: user});
                 deltaT = deltaT.user["tz_offset"];
@@ -321,7 +337,7 @@ async function fire_message(message, recipents, client, user){
             //console.log(d)
             let result = await client.chat.scheduleMessage({
                 channel: i,
-                text: message.msg,
+                text: m,
                 post_at: d
             });
         }
@@ -397,7 +413,8 @@ async function fire_message(message, recipents, client, user){
     // });
 }
 
-function parse_message(msg){
+function parse_message(msg, user){
+    var m = msg;
     if(msg.includes('$')){
         for(let i=0; i< msg.length; i++){
             //console.log(i)
@@ -413,16 +430,16 @@ function parse_message(msg){
                 switch(to_change){
                     case "${firstName}":
                         //console.log(to_change)
-                        msg = msg.replace(to_change, "Abhiraj");
+                        m = m.replace(to_change, user.first_name);
                         //console.log(msg)
                         break;
                     case "${lastName}":
                         //console.log(to_change)
-                        msg = msg.replace(to_change, "A");
+                        m = m.replace(to_change, user.last_name);
                         break;
                     case "${fullName}":
                         //console.log(to_change)
-                        msg = msg.replace(to_change, "Abhiraj A");
+                        m = m.replace(to_change, user.first_name + " " + user.last_name);
                         break;
                     default:
                         console.log(to_change);
@@ -432,5 +449,5 @@ function parse_message(msg){
             }
         }
     }   
-    return msg
+    return m;
 }
