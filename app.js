@@ -311,7 +311,6 @@ async function fire_message(message, recipents, client, user){
                 var deltaT = await client.users.info({user: user});
                 deltaT = deltaT.user["tz_offset"];
                 d -= deltaT
-                
             }
             else if(message.tzone == 't2'){
                 var deltaT = await client.users.info({user: i});
@@ -324,7 +323,6 @@ async function fire_message(message, recipents, client, user){
                 channel: i,
                 text: message.msg,
                 post_at: d
-
             });
         }
         catch(e){
@@ -346,10 +344,17 @@ async function fire_message(message, recipents, client, user){
         chan_users = [...new Set(chan_users)]
         //console.log(chan_users)
         for(var i of chan_users){
+            //console.log("T2")
             try{
-                let result = await client.chat.postMessage({
+                var d = dayjs.tz(message.date + " " + message.time, "Etc/UTC")
+                d = d.unix()
+                var deltaT = await client.users.info({user: i});
+                deltaT = deltaT.user["tz_offset"];
+                d -= deltaT
+                let result = await client.chat.scheduleMessage({
                     channel: i,
-                    text: message.msg
+                    text: message.msg,
+                    post_at: d
                 });
             }
             catch(e){
@@ -361,11 +366,20 @@ async function fire_message(message, recipents, client, user){
     else if(message.tzone == 't3' || message.tzone == 't1'){
         //console.log("BRoooooo")
         for(var i of recipents.channels){
-            console.log(i)
+            //console.log(i)
             try{
-                let result = await client.chat.postMessage({
+                var d = dayjs.tz(message.date + " " + message.time, "Etc/UTC")
+                d = d.unix()
+                if(message.tzone == 't1'){
+                    var deltaT = await client.users.info({user: user});
+                    deltaT = deltaT.user["tz_offset"];
+                    d -= deltaT
+                }
+
+                let result = await client.chat.scheduleMessage({
                     channel: i,
-                    text: message.msg
+                    text: message.msg,
+                    post_at: d
                 });
                 
             }
