@@ -1,6 +1,6 @@
 const {App} = require("@slack/bolt");
 const dayjs = require("dayjs");
-
+const fs = require("fs")
 var utc = require('dayjs/plugin/utc')
 var timezone = require('dayjs/plugin/timezone')
 
@@ -18,6 +18,7 @@ var app = new App(
     }
 );
 
+const logFile = "./scheduler.log"
 
 var recipents = {
     users: [],
@@ -336,7 +337,7 @@ async function fire_message(message, recipents, client, user){
             }
 
             if(d >= dayjs().unix()){
-                console.log("Present")
+                //console.log("Present")
                 let result = await client.chat.scheduleMessage({
                     channel: i,
                     text: m,
@@ -344,12 +345,16 @@ async function fire_message(message, recipents, client, user){
                 });    
             }
             else{
-                console.log("Past")
+                //console.log("Past")
                 let result = await client.chat.postMessage({
                     channel: i,
                     text: m
                 });
             }
+            let data = JSON.stringify({recipent: i, message: m, time: dayjs.unix(d).format()})
+            fs.appendFile(logFile, data + "\n", (err) => {
+                if(err) throw err;
+            });
             //console.log(dayjs())  
             //console.log(d)
             
@@ -393,6 +398,10 @@ async function fire_message(message, recipents, client, user){
                         text: message.msg,
                     });
                 }
+                let data = JSON.stringify({recipent: i, message: message.msg, time: dayjs.unix(d).format()})
+                fs.appendFile(logFile, data + "\n", (err) => {
+                    if(err) throw err;
+                });
             }
             catch(e){
                 failed++;
@@ -426,6 +435,11 @@ async function fire_message(message, recipents, client, user){
                         text: message.msg,
                     });
                 }
+                let data = JSON.stringify({recipent: i, message: message.msg, time: dayjs.unix(d).format()})
+                fs.appendFile(logFile, data + "\n", (err) => {
+                    if(err) throw err;
+                });
+
             }
             catch(e){
                 failed++;
@@ -435,6 +449,9 @@ async function fire_message(message, recipents, client, user){
     }
 
     console.log("No. of Failed Messages ", failed);
+    fs.appendFile(logFile, "No. of Failed Messages " + failed + "\n", (err) => {
+       if(err) throw err;
+    });
     // let result = await client.chat.postMessage({
     //     channel: "U048XU5F0L9",
     //     text: message.msg
