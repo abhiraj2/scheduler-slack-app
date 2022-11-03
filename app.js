@@ -322,7 +322,7 @@ async function fire_message(message, recipents, client, user){
             //console.log(u_inf)
 
             var m = parse_message(message.msg, u_inf);
-            console.log(m)
+            //console.log(m)
             if(message.tzone == 't1'){
                 var deltaT = await client.users.info({user: user});
                 deltaT = deltaT.user["tz_offset"];
@@ -332,14 +332,27 @@ async function fire_message(message, recipents, client, user){
                 var deltaT = await client.users.info({user: i});
                 deltaT = deltaT.user["tz_offset"];
                 d -= deltaT
+                
             }
-            //console.log(d)  
+
+            if(d >= dayjs().unix()){
+                console.log("Present")
+                let result = await client.chat.scheduleMessage({
+                    channel: i,
+                    text: m,
+                    post_at: d
+                });    
+            }
+            else{
+                console.log("Past")
+                let result = await client.chat.postMessage({
+                    channel: i,
+                    text: m
+                });
+            }
+            //console.log(dayjs())  
             //console.log(d)
-            let result = await client.chat.scheduleMessage({
-                channel: i,
-                text: m,
-                post_at: d
-            });
+            
         }
         catch(e){
             failed++;
@@ -367,11 +380,19 @@ async function fire_message(message, recipents, client, user){
                 var deltaT = await client.users.info({user: i});
                 deltaT = deltaT.user["tz_offset"];
                 d -= deltaT
-                let result = await client.chat.scheduleMessage({
-                    channel: i,
-                    text: message.msg,
-                    post_at: d
-                });
+                if(d >= dayjs().unix()){
+                    let result = await client.chat.scheduleMessage({
+                        channel: i,
+                        text: message.msg,
+                        post_at: d
+                    });
+                }
+                else{
+                    let result = await client.chat.postMessage({
+                        channel: i,
+                        text: message.msg,
+                    });
+                }
             }
             catch(e){
                 failed++;
@@ -392,12 +413,19 @@ async function fire_message(message, recipents, client, user){
                     d -= deltaT
                 }
 
-                let result = await client.chat.scheduleMessage({
-                    channel: i,
-                    text: message.msg,
-                    post_at: d
-                });
-                
+                if(d >= dayjs().unix()){
+                    let result = await client.chat.scheduleMessage({
+                        channel: i,
+                        text: message.msg,
+                        post_at: d
+                    });
+                }
+                else{
+                    let result = await client.chat.postMessage({
+                        channel: i,
+                        text: message.msg,
+                    });
+                }
             }
             catch(e){
                 failed++;
