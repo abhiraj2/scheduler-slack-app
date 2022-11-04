@@ -1,13 +1,17 @@
+//Imports
 const {App} = require("@slack/bolt");
+
 const dayjs = require("dayjs");
 const fs = require("fs")
+
 var utc = require('dayjs/plugin/utc')
 var timezone = require('dayjs/plugin/timezone')
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
-//console.log(process.env.SLACK_SIGNING_SECRET, process.env.SLACK_BOT_TOKEN)
 
+
+//App Config
 var app = new App(
     {
         token: process.env.SLACK_BOT_TOKEN,
@@ -32,65 +36,66 @@ var message = {
     msg: ""
 }
 
+const messageModal1 = {
+    "type": "modal",
+    "callback_id": "selected",
+    "submit": {
+        "type": "plain_text",
+        "text": "Next",
+        "emoji": true
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+    },
+    "title": {
+        "type": "plain_text",
+        "text": "Message and Recipents",
+        "emoji": true
+    },
+    "blocks": [
+        {
+            "type": "divider"
+        },
+        {
+            "type": "input",
+            "label": {
+                "type": "plain_text",
+                "text": "Message",
+                "emoji": true
+            },
+            "element": {
+                "type": "plain_text_input",
+                "multiline": true
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Recipents"
+            },
+            "accessory": {
+                "type": "multi_conversations_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select conversations",
+                    "emoji": true
+                },
+                "action_id": "multi_conversations_select-action"
+            }
+        }
+    ]
+}
+
 app.shortcut("g_schedule", async ({shortcut, ack, client}) => {
     await ack();
     try {
         const result = await client.views.open({
             trigger_id: shortcut.trigger_id,
-            view: {
-                "type": "modal",
-                "callback_id": "selected",
-                "submit": {
-                    "type": "plain_text",
-                    "text": "Next",
-                    "emoji": true
-                },
-                "close": {
-                    "type": "plain_text",
-                    "text": "Cancel",
-                    "emoji": true
-                },
-                "title": {
-                    "type": "plain_text",
-                    "text": "Message and Recipents",
-                    "emoji": true
-                },
-                "blocks": [
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "input",
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Message",
-                            "emoji": true
-                        },
-                        "element": {
-                            "type": "plain_text_input",
-                            "multiline": true
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "Recipents"
-                        },
-                        "accessory": {
-                            "type": "multi_conversations_select",
-                            "placeholder": {
-                                "type": "plain_text",
-                                "text": "Select conversations",
-                                "emoji": true
-                            },
-                            "action_id": "multi_conversations_select-action"
-                        }
-                    }
-                ]
-            }
+            view: messageModal1
         });
-        //console.log(result)
     }
     catch(error){
         console.log(error)
@@ -126,60 +131,8 @@ app.action("button_click", async ({body, ack, client}) => {
     try {
         const result = await client.views.open({
             trigger_id: body.trigger_id,
-            view: {
-                "type": "modal",
-                "callback_id": "selected",
-                "submit": {
-                    "type": "plain_text",
-                    "text": "Next",
-                    "emoji": true
-                },
-                "close": {
-                    "type": "plain_text",
-                    "text": "Cancel",
-                    "emoji": true
-                },
-                "title": {
-                    "type": "plain_text",
-                    "text": "Message and Recipents",
-                    "emoji": true
-                },
-                "blocks": [
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "input",
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Message",
-                            "emoji": true
-                        },
-                        "element": {
-                            "type": "plain_text_input",
-                            "multiline": true
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "Recipents"
-                        },
-                        "accessory": {
-                            "type": "multi_conversations_select",
-                            "placeholder": {
-                                "type": "plain_text",
-                                "text": "Select conversations",
-                                "emoji": true
-                            },
-                            "action_id": "multi_conversations_select-action"
-                        }
-                    }
-                ]
-            }
+            view: messageModal1
         });
-        //console.log(result)
     }
     catch(error){
         console.log(error)
@@ -202,18 +155,16 @@ app.action("multi_conversations_select-action", async ({body, ack, client, user,
             recipents.channels.push(i);
         }
     }
+    //Create arrays of unique Users groups and channels
     recipents.users = [...new Set(recipents.users)]
     recipents.channels = [...new Set(recipents.channels)]
     recipents.groups = [...new Set(recipents.groups)]
     
-    //console.log(body)
 });
 
 app.view('selected', async ({body, ack, view, user, client}) => {
     await ack()
-    //console.log(view.blocks[1].block_id)
     message.msg = Object.values(view.state.values[view.blocks[1].block_id])[0].value
-    //console.log(message, clients)
 
     await client.views.open(
         {
@@ -347,8 +298,6 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
     message.time = view.state.values[view.blocks[4].block_id]['timepicker-action'].selected_time;
     message.tzone = view.state.values[view.blocks[5].block_id]['static_select-action'].selected_option.value;
 
-    //message.msg = parse_message(message.msg); // will be called inside fire_message
-    //console.log(body.user)
     fire_message(message, recipents, client, body.user.id)
 });
 
@@ -366,28 +315,19 @@ async function fire_message(message, recipents, client, user){
     }
     console.log(message.date, message.time)
     for(var i of recipents.users){
-        //console.log(i);
         try{
-            // var t = await client.users.info({user: i});
-            // t = t.user['tz_offset']/3600;
-
             // It just works with Epoch time which is in UTC
             var d = dayjs.tz(message.date + " " + message.time, "Etc/UTC")
-            //console.log(d)
             d = d.unix()
-            //console.log(d)
-
 
             var inf = await client.users.info({user: i});
             inf = inf.user['real_name'].split(/(\s+)/);
-            //console.log(inf)
+
             u_inf.last_name = inf[inf.length-1]
             inf = inf.slice(0,inf.length-1);
             u_inf.first_name = inf.join("")
-            //console.log(u_inf)
 
             var m = parse_message(message.msg, u_inf);
-            //console.log(m)
             if(message.tzone == 't1'){
                 var deltaT = await client.users.info({user: user});
                 deltaT = deltaT.user["tz_offset"];
@@ -419,8 +359,6 @@ async function fire_message(message, recipents, client, user){
             fs.appendFile(logFile, data + "\n", (err) => {
                 if(err) throw err;
             });
-            //console.log(dayjs())  
-            //console.log(d)
             
         }
         catch(e){
@@ -440,9 +378,7 @@ async function fire_message(message, recipents, client, user){
             }       
         }
         chan_users = [...new Set(chan_users)]
-        //console.log(chan_users)
         for(var i of chan_users){
-            //console.log("T2")
             try{
                 var d = dayjs.tz(message.date + " " + message.time, "Etc/UTC")
                 d = d.unix()
@@ -474,9 +410,7 @@ async function fire_message(message, recipents, client, user){
         }
     }
     else if(message.tzone == 't3' || message.tzone == 't1'){
-        //console.log("BRoooooo")
         for(var i of recipents.channels){
-            //console.log(i)
             try{
                 var d = dayjs.tz(message.date + " " + message.time, "Etc/UTC")
                 d = d.unix()
@@ -516,45 +450,33 @@ async function fire_message(message, recipents, client, user){
     fs.appendFile(logFile, "No. of Failed Messages " + failed + "\n", (err) => {
        if(err) throw err;
     });
-    // let result = await client.chat.postMessage({
-    //     channel: "U048XU5F0L9",
-    //     text: message.msg
-    // });
 }
 
 function parse_message(msg, user){
     var m = msg;
     if(msg.includes('$')){
         for(let i=0; i< msg.length; i++){
-            //console.log(i)
             if(msg[i] == '$' && (i+1<msg.length && msg[i+1]=='{')){
                 for(var j=i+1; j<msg.length; j++){
                     if(msg[j] == '}'){
-                        //console.log(i,j)
                         break;
                     }
                 }
                 let to_change = msg.slice(i, j+1)
-                //console.log(to_change)
                 switch(to_change){
                     case "${firstName}":
-                        //console.log(to_change)
                         m = m.replace(to_change, user.first_name);
-                        //console.log(msg)
                         break;
                     case "${lastName}":
-                        //console.log(to_change)
                         m = m.replace(to_change, user.last_name);
                         break;
                     case "${fullName}":
-                        //console.log(to_change)
                         m = m.replace(to_change, user.first_name + " " + user.last_name);
                         break;
                     default:
                         console.log(to_change);
                         break;
                 }
-                //console.log(i, j+1)
             }
         }
     }   
