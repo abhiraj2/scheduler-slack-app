@@ -166,10 +166,9 @@ app.view('selected', async ({body, ack, view, user, client}) => {
     await ack()
     message.msg = Object.values(view.state.values[view.blocks[1].block_id])[0].value
 
-    await client.views.update(
+    await client.views.open(
         {
-            view_id: body.view_id,
-            hash: body.view.hash,
+            trigger_id: body.trigger_id,
             view: {
                 "callback_id": "reminder_set",
                 "title": {
