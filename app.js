@@ -17,7 +17,7 @@ var app = new App(
         token: process.env.SLACK_BOT_TOKEN,
         signingSecret: process.env.SLACK_SIGNING_SECRET,
         appToken: process.env.SLACK_APP_TOKEN,
-        port: process.env.PORT || 5000
+        port: process.env.PORT || 3000
     }
 );
 
@@ -163,132 +163,130 @@ app.action("multi_conversations_select-action", async ({body, ack, client, user,
 });
 
 app.view('selected', async ({body, ack, view, user, client}) => {
-    await ack()
+    
     message.msg = Object.values(view.state.values[view.blocks[1].block_id])[0].value
-
-    await client.views.open(
-        {
-            trigger_id: body.trigger_id,
-            view: {
-                "callback_id": "reminder_set",
-                "title": {
-                    "type": "plain_text",
-                    "text": "Date and Time",
-                    "emoji": true
-                },
-                "submit": {
-                    "type": "plain_text",
-                    "text": "Submit",
-                    "emoji": true
-                },
-                "type": "modal",
-                "close": {
-                    "type": "plain_text",
-                    "text": "Cancel",
-                    "emoji": true
-                },
-                "blocks": [
-                    {
-                        "type": "divider"
+    const newModal = {
+        "callback_id": "reminder_set",
+        "title": {
+            "type": "plain_text",
+            "text": "Date and Time",
+            "emoji": true
+        },
+        "submit": {
+            "type": "plain_text",
+            "text": "Submit",
+            "emoji": true
+        },
+        "type": "modal",
+        "close": {
+            "type": "plain_text",
+            "text": "Cancel",
+            "emoji": true
+        },
+        "blocks": [
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Message*"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `\`\`\`${message.msg}\`\`\``
+                }
+            },
+            {
+                "type": "input",
+                "element": {
+                    "type": "datepicker",
+                    "initial_date": "1990-04-28",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select a date",
+                        "emoji": true
                     },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "*Message*"
-                        }
+                    "action_id": "datepicker-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Date",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "input",
+                "element": {
+                    "type": "timepicker",
+                    "initial_time": "13:37",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select time",
+                        "emoji": true
                     },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": `\`\`\`${message.msg}\`\`\``
-                        }
+                    "action_id": "timepicker-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Time",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "input",
+                "element": {
+                    "type": "static_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select an item",
+                        "emoji": true
                     },
-                    {
-                        "type": "input",
-                        "element": {
-                            "type": "datepicker",
-                            "initial_date": "1990-04-28",
-                            "placeholder": {
+                    "options": [
+                        {
+                            "text": {
                                 "type": "plain_text",
-                                "text": "Select a date",
+                                "text": "Sender Timezone",
                                 "emoji": true
                             },
-                            "action_id": "datepicker-action"
+                            "value": "t1"
                         },
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Date",
-                            "emoji": true
-                        }
-                    },
-                    {
-                        "type": "input",
-                        "element": {
-                            "type": "timepicker",
-                            "initial_time": "13:37",
-                            "placeholder": {
+                        {
+                            "text": {
                                 "type": "plain_text",
-                                "text": "Select time",
+                                "text": "Recipent Timezone",
                                 "emoji": true
                             },
-                            "action_id": "timepicker-action"
+                            "value": "t2"
                         },
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Time",
-                            "emoji": true
-                        }
-                    },
-                    {
-                        "type": "input",
-                        "element": {
-                            "type": "static_select",
-                            "placeholder": {
+                        {
+                            "text": {
                                 "type": "plain_text",
-                                "text": "Select an item",
+                                "text": "GMT",
                                 "emoji": true
                             },
-                            "options": [
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "Sender Timezone",
-                                        "emoji": true
-                                    },
-                                    "value": "t1"
-                                },
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "Recipent Timezone",
-                                        "emoji": true
-                                    },
-                                    "value": "t2"
-                                },
-                                {
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "GMT",
-                                        "emoji": true
-                                    },
-                                    "value": "t3"
-                                }
-                            ],
-                            "action_id": "static_select-action"
-                        },
-                        "label": {
-                            "type": "plain_text",
-                            "text": "Timezone",
-                            "emoji": true
+                            "value": "t3"
                         }
-                    }
-                ]
+                    ],
+                    "action_id": "static_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Timezone",
+                    "emoji": true
+                }
             }
-        }
-    );
+        ]
+    }
 
+    await ack({
+        response_action: 'update',
+        view: newModal,
+      })
 });
 
 
