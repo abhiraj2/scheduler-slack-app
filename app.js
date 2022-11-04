@@ -23,6 +23,7 @@ var app = new App(
 
 const logFile = "./scheduler.log"
 
+//Object to store the list of all different types of recipents
 var recipents = {
     users: [],
     channels: [],
@@ -36,6 +37,8 @@ var message = {
     msg: ""
 }
 
+
+//Loaded when the app is first called
 const messageModal1 = {
     "type": "modal",
     "callback_id": "selected",
@@ -89,6 +92,7 @@ const messageModal1 = {
     ]
 }
 
+//Global Shortcut trigger
 app.shortcut("g_schedule", async ({shortcut, ack, client}) => {
     await ack();
     try {
@@ -102,6 +106,7 @@ app.shortcut("g_schedule", async ({shortcut, ack, client}) => {
     }
 })
 
+//calling app on hello message, for convenient debugging
 app.message("hello", async ({message, say}) => {
     await say({
         blocks: [
@@ -140,6 +145,7 @@ app.action("button_click", async ({body, ack, client}) => {
 });
 
 
+//Processing Recipent list
 app.action("multi_conversations_select-action", async ({body, ack, client, user, message}) => {
     await ack()
     recipents.users = [];
@@ -162,6 +168,7 @@ app.action("multi_conversations_select-action", async ({body, ack, client, user,
     
 });
 
+//Update Modal when click next
 app.view('selected', async ({body, ack, view, user, client}) => {
     
     message.msg = Object.values(view.state.values[view.blocks[1].block_id])[0].value
@@ -289,7 +296,7 @@ app.view('selected', async ({body, ack, view, user, client}) => {
       })
 });
 
-
+//Process on Submit
 app.view("reminder_set", async ({body, ack, view, user, client}) => {
     await ack();
     message.date = view.state.values[view.blocks[3].block_id]['datepicker-action'].selected_date;
@@ -304,7 +311,7 @@ app.view("reminder_set", async ({body, ack, view, user, client}) => {
     console.log("App running");
 })();
 
-
+//Main function to send messages
 async function fire_message(message, recipents, client, user){
     var failed = 0;
     var u_inf = {
@@ -312,6 +319,7 @@ async function fire_message(message, recipents, client, user){
         last_name:  ""
     }
     console.log(message.date, message.time)
+    //For user type
     for(var i of recipents.users){
         try{
             // It just works with Epoch time which is in UTC
@@ -366,6 +374,7 @@ async function fire_message(message, recipents, client, user){
         
     }
 
+    // For Channels with Message timezone as Recipent Time, we DM each user at the correct time
     if(message.tzone == 't2'){
         var chan_users = [];
         for(var i of recipents.channels){
@@ -450,6 +459,7 @@ async function fire_message(message, recipents, client, user){
     });
 }
 
+//Parse Function for ${firstName} ${lastName} ${fullName}
 function parse_message(msg, user){
     var m = msg;
     if(msg.includes('$')){
