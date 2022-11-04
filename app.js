@@ -12,9 +12,8 @@ var app = new App(
     {
         token: process.env.SLACK_BOT_TOKEN,
         signingSecret: process.env.SLACK_SIGNING_SECRET,
-        socketMode: true,
         appToken: process.env.SLACK_APP_TOKEN,
-        port: process.env.PORT || 3000
+        port: 3000
     }
 );
 
@@ -32,6 +31,71 @@ var message = {
     tzone: "",
     msg: ""
 }
+
+app.shortcut("g_schedule", async ({shortcut, ack, client}) => {
+    await ack();
+    try {
+        const result = await client.views.open({
+            trigger_id: shortcut.trigger_id,
+            view: {
+                "type": "modal",
+                "callback_id": "selected",
+                "submit": {
+                    "type": "plain_text",
+                    "text": "Next",
+                    "emoji": true
+                },
+                "close": {
+                    "type": "plain_text",
+                    "text": "Cancel",
+                    "emoji": true
+                },
+                "title": {
+                    "type": "plain_text",
+                    "text": "Message and Recipents",
+                    "emoji": true
+                },
+                "blocks": [
+                    {
+                        "type": "divider"
+                    },
+                    {
+                        "type": "input",
+                        "label": {
+                            "type": "plain_text",
+                            "text": "Message",
+                            "emoji": true
+                        },
+                        "element": {
+                            "type": "plain_text_input",
+                            "multiline": true
+                        }
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "Recipents"
+                        },
+                        "accessory": {
+                            "type": "multi_conversations_select",
+                            "placeholder": {
+                                "type": "plain_text",
+                                "text": "Select conversations",
+                                "emoji": true
+                            },
+                            "action_id": "multi_conversations_select-action"
+                        }
+                    }
+                ]
+            }
+        });
+        //console.log(result)
+    }
+    catch(error){
+        console.log(error)
+    }
+})
 
 app.message("hello", async ({message, say}) => {
     await say({
