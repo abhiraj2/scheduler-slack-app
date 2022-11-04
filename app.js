@@ -162,13 +162,14 @@ app.action("multi_conversations_select-action", async ({body, ack, client, user,
     
 });
 
-app.view('selected', async ({body, ack, view, user, client}) => {
+app.action('selected', async ({body, ack, view, user, client}) => {
     await ack()
     message.msg = Object.values(view.state.values[view.blocks[1].block_id])[0].value
 
-    await client.views.open(
+    await client.views.update(
         {
-            trigger_id: body.trigger_id,
+            view_id: body.view_id,
+            hash: body.view.hash,
             view: {
                 "callback_id": "reminder_set",
                 "title": {
