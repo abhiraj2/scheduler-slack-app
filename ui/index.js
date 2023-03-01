@@ -197,4 +197,4 @@ const newModal = {
     ]
 };
 
-exports = {messageModal1, helloModal, newModal}
+module.exports = {messageModal1: messageModal1, helloModal: helloModal, newModal: newModal}
