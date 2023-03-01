@@ -7,7 +7,7 @@ const fs = require("fs")
 var utc = require('dayjs/plugin/utc')
 var timezone = require('dayjs/plugin/timezone')
 
-const {messageModal1, newModal,helloModal} = require("./ui");
+var {messageModal1, newModal,helloModal} = require("./ui");
 console.log(messageModal1, newModal, helloModal);
 
 dayjs.extend(utc)
