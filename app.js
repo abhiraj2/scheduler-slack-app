@@ -8,7 +8,7 @@ var utc = require('dayjs/plugin/utc')
 var timezone = require('dayjs/plugin/timezone')
 
 var {messageModal1, newModal,helloModal} = require("./ui");
-console.log(messageModal1, newModal, helloModal);
+//console.log(messageModal1, newModal, helloModal);
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -134,7 +134,7 @@ async function fire_message(message, recipents, client, user){
         first_name: "",
         last_name:  ""
     }
-    console.log(message.date, message.time)
+    //console.log(message.date, message.time)
     //For user type
     for(var i of recipents.users){
         try{
