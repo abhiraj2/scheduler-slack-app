@@ -12,7 +12,7 @@ async function fire_message(message, recipents, client, user){
         first_name: "",
         last_name:  ""
     }
-    //console.log(message.date, message.time)
+    console.log(message.date, message.time)
     //For user type
     for(var i of recipents.users){
         try{
